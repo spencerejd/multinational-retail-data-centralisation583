@@ -85,6 +85,32 @@ class DatabaseConnector:
         except Exception as e:
             print(f"Error listing tables: {e}")
             return []
+        
+    def upload_to_db(self, df, table_name):
+        '''
+        Uploads a Pandas DataFrame to the specified table in the database.
+        
+        Parameters:
+            df (pd.DataFrame):
+                The DataFrame to be uploaded.
+            table_name (str):
+                The name of the table to upload the data to.
+        '''
+        if not self.connection:
+            print("Error: Database connection not established.")
+            return
+        
+        try:
+            # Use the Pandas to_sql method to upload DataFrame to the specified table
+            df.to_sql(name=table_name, con=self.connection, index=False, if_exists='replace')
+            print(f"Data uploaded to the '{table_name}' table successfully.")
+        except Exception as e:
+            print(f"Error uploading data to table '{table_name}': {e}")
+
+
+        
+
+
 
 
 
