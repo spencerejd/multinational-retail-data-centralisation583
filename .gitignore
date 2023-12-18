@@ -1,2 +1,3 @@
 # Ignore a specific file
 db_creds.yaml
+rds_upload_db_creds.yaml
