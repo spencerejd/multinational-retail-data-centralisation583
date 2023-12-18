@@ -6,13 +6,15 @@ class DataExtractor:
     def __init__(self, db_connector):
         self.db_connector = db_connector
 
-    def read_rds_table(self, table_name):
+    def read_rds_table(self, db_engine, table_name):
         """
         Extract data from the specified RDS database table to a pandas DataFrame.
 
         Parameters:
             db_connector (DatabaseConnector):
                 An instance of the DatabaseConnector class.
+            db_engine:
+                A SQLAlchemy database engine
             table_name (str):
                 The name of the table to extract data from.
         
@@ -20,8 +22,6 @@ class DataExtractor:
             pd.DataFrame:
                 A pandas DataFrame containing the data from the specified table.
         """
-
-        db_engine = self.db_connector.init_db_engine()
 
         if not db_engine:
             print("Failed to initialise the database engine.")

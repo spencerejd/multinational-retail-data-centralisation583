@@ -41,9 +41,9 @@ class DatabaseConnector:
         Returns:
         Database engine
         '''
-        print("Called 'init_db_engine' method for database engine initialisation")
+        print("Called 'init_db_engine' method for database engine initialisation.")
         credentials = self.read_db_creds(yaml_file_path)
-        print("Database credentials now stored in 'credentials' variable")
+        print("Database credentials now stored in 'credentials' variable.")
         if not credentials:
             print("Failed to initialise database engine. Missing or invalid credentials.")
             return None
