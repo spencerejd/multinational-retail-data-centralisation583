@@ -6,26 +6,25 @@ class DatabaseConnector:
     def __init__(self, yaml_file_path='db_creds.yaml'):
         '''
         Initialise the DatabaseConnector class.
-        
         '''
         self.yaml_file_path = yaml_file_path
         self.connection = None
-        self.credentials = self.read_db_creds()
+        self.credentials = None
 
     
-    def read_db_creds(self):
+    def read_db_creds(self, yaml_file_path):
         '''
-        Read database credentials from the 'db_creds.yaml file'
+        Read database credentials from the relevant yaml file
         and return a dictionary.
 
         Returns:
             dict: a dictionary containing all database credentials        
         '''
 
-        yaml_file_path = 'db_creds.yaml'
         try:
-            with open(self.yaml_file_path, 'r') as file:
+            with open(yaml_file_path, 'r') as file:
                 credentials = yaml.safe_load(file)
+                print(f"Read credentials from {yaml_file_path}")
                 return credentials
         except FileNotFoundError:
             print(f"Error: YAML file not found at {yaml_file_path}")
@@ -34,7 +33,7 @@ class DatabaseConnector:
             print(f"Error parsing YAML file: {e}")
             return {}
     
-    def init_db_engine(self):
+    def init_db_engine(self, yaml_file_path='db_creds.yaml'):
         '''
         Read the credentials returned from read_db_creds
         and initialise and return an SQLAlchemy database engine
@@ -42,15 +41,16 @@ class DatabaseConnector:
         Returns:
         Database engine
         '''
-        credentials = self.read_db_creds()
-
+        print("Called 'init_db_engine' method for database engine initialisation")
+        credentials = self.read_db_creds(yaml_file_path)
+        print("DB credentials now stored in 'credentials' variable")
         if not credentials:
             print("Failed to initialise database engine. Missing or invalid credentials.")
             return None
         
         try:
             engine = create_engine(f"postgresql://{credentials['RDS_USER']}:{credentials['RDS_PASSWORD']}@{credentials['RDS_HOST']}:{credentials['RDS_PORT']}/{credentials['RDS_DATABASE']}")
-            print("Database engine initialised successfully.")
+            print(f"Database engine initialised successfully with the credentials in {yaml_file_path}.")
             self.connection = engine
             return engine
         except Exception as e:
@@ -108,8 +108,13 @@ class DatabaseConnector:
             print(f"Error uploading data to table '{table_name}': {e}")
 
 
-        
+# To be able to connect to a new database, you need to initialise a new connection to 
+# a new database where your table will be stored I think
 
+# I think what I need to do is redefine yaml_file_path in the DatabaseConnector class
+# initialisation as the new file path, so when you use the init_db_engine method, it 
+# knows the new file path you want it to read credentials from 
+# You now have your db_creds in a file - create a new connection for the upload
 
 
 

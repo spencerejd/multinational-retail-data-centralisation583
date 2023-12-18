@@ -44,9 +44,6 @@ class DataCleaning:
 
 
 
-
-
-
 # Create an instance of the DatabaseConnector class
 connector = DatabaseConnector()
 # Initialise the database engine
@@ -63,7 +60,5 @@ legacy_users_table = 'legacy_users'
 
 # Clean the user data
 cleaned_users_df = data_cleaner.clean_user_data(legacy_users_table)
-print
-# Use the DatabaseConnector to get the list of tables
-# tables = connector.list_db_tables()
+
 
