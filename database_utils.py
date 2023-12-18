@@ -43,7 +43,7 @@ class DatabaseConnector:
         '''
         print("Called 'init_db_engine' method for database engine initialisation")
         credentials = self.read_db_creds(yaml_file_path)
-        print("DB credentials now stored in 'credentials' variable")
+        print("Database credentials now stored in 'credentials' variable")
         if not credentials:
             print("Failed to initialise database engine. Missing or invalid credentials.")
             return None
@@ -117,9 +117,8 @@ class DatabaseConnector:
 # You now have your db_creds in a file - create a new connection for the upload
 
 
-
-
-
-connector = DatabaseConnector()
-credentials = connector.init_db_engine()
-credentials = connector.list_db_tables()
+if __name__ == '__main__':
+    connector = DatabaseConnector()
+    credentials = connector.init_db_engine()
+    credentials = connector.list_db_tables()
+    upload_engine = connector.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml')

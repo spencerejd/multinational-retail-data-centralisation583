@@ -15,7 +15,10 @@ class DataCleaning:
         '''
         Clean the user data from the specified database table.
         '''
+        
         table_name_df = self.data_extractor.read_rds_table(table_name)
+        print("DataFrame cleaning operation initiated")
+        
         # Set 'index' as index of the DataFrame
         table_name_df.set_index('index', inplace=True)
 
@@ -44,21 +47,21 @@ class DataCleaning:
 
 
 
-# Create an instance of the DatabaseConnector class
-connector = DatabaseConnector()
-# Initialise the database engine
-connector_engine = connector.init_db_engine()
+# # Create an instance of the DatabaseConnector class
+# connector = DatabaseConnector()
+# # Initialise the database engine
+# connector_engine = connector.init_db_engine()
     
-# Create an instance of the DataExtractor class, passing the DatabaseConnector as an argument
-data_extractor = DataExtractor(db_connector=connector)
+# # Create an instance of the DataExtractor class, passing the DatabaseConnector as an argument
+# data_extractor = DataExtractor(db_connector=connector)
 
-# Create an instance of the DataCleaning class, passing the DatabaseExtractor as an argument
-data_cleaner = DataCleaning(data_extractor=data_extractor)
+# # Create an instance of the DataCleaning class, passing the DatabaseExtractor as an argument
+# data_cleaner = DataCleaning(data_extractor=data_extractor)
 
-# The table that contains user data
-legacy_users_table = 'legacy_users'
+# # The table that contains user data
+# legacy_users_table = 'legacy_users'
 
-# Clean the user data
-cleaned_users_df = data_cleaner.clean_user_data(legacy_users_table)
+# # Clean the user data
+# cleaned_users_df = data_cleaner.clean_user_data(legacy_users_table)
 
 
