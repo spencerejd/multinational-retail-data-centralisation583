@@ -6,8 +6,8 @@ from data_extraction import DataExtractor
 database = DatabaseConnector()
 # Initialise engine with yaml_file_path set to 'default'
 database_engine = database.init_db_engine()
-# Create an instance of the DataExtractor class, with our initialised engine passed as an argument
-data_extractor = DataExtractor(database_engine)
+# Create an instance of the DataExtractor class
+data_extractor = DataExtractor()
 # Extract data from table 'legacy_users' and store it in a DataFrame
 df = data_extractor.read_rds_table(database_engine, 'legacy_users')
 # Create an instance of the DataCleaning class, with our DataFrame passed as an argument

@@ -43,3 +43,13 @@ class DataCleaning:
         print("DataFrame cleaned successfully.")
 
         return df
+    
+    def clean_card_data(self, df):
+        '''
+        Clean the card data from the specified DataFrame.
+        '''
+        print("DataFrame cleaning operation initiated.")
+
+        # Drop rows with NULL values
+        df = df.dropna()        
+        

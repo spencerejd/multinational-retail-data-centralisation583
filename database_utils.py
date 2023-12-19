@@ -108,15 +108,6 @@ class DatabaseConnector:
             print(f"Error uploading data to table '{table_name}': {e}")
 
 
-# To be able to connect to a new database, you need to initialise a new connection to 
-# a new database where your table will be stored I think
-
-# I think what I need to do is redefine yaml_file_path in the DatabaseConnector class
-# initialisation as the new file path, so when you use the init_db_engine method, it 
-# knows the new file path you want it to read credentials from 
-# You now have your db_creds in a file - create a new connection for the upload
-
-
 if __name__ == '__main__':
     connector = DatabaseConnector()
     credentials = connector.init_db_engine()
