@@ -48,20 +48,19 @@ class DataCleaning:
         '''
         Clean the card data from the specified DataFrame.
         '''
-        print("DataFrame cleaning operation initiated.")
-
         # if not df:
         #     print("Failed to find DataFrame")
         #     return pd.DataFrame() # Return empty DataFrame
+        print("DataFrame cleaning operation initiated.")
 
-        # # Drop rows with NULL values
-        # #df = df.dropna()
+        # Drop rows with NULL values
+        df = df.dropna()
 
-        # # Change 'card_number' column into 'int64' dtype
-        # df['card_number'] = df['card_number'].astype('int64')
+        # Change 'card_number' column into 'int64' dtype
+        df['card_number'] = df['card_number'].astype('int64')
 
-        # # Change 'card_provider' column into 'str' dtype
-        # df['card_provider'] = df['card_provider'].astype('string')
+        # Change 'card_provider' column into 'str' dtype
+        df['card_provider'] = df['card_provider'].astype('string')
 
         # # Change columns containing dates into 'datetime64' dtype
         # date_columns = ['expiry_date', 'date_payment_confirmed']
@@ -74,12 +73,3 @@ class DataCleaning:
         # #df = df.dropna(subset=date_columns)
         print("DataFrame cleaning operation completed.")
         return df
-
-
-
-if __name__ == '__main__':
-    data_extractor = DataExtractor()
-    pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
-    pdf_df = data_extractor.retrieve_pdf_data(pdf_path)
-    #print(pdf_df)
-    print(pdf_df.info())
