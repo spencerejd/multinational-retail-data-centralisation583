@@ -50,36 +50,30 @@ class DataCleaning:
         '''
         print("DataFrame cleaning operation initiated.")
 
-        if not df:
-            print("Failed to find DataFrame")
-            return pd.DataFrame() # Return empty DataFrame
+        # if not df:
+        #     print("Failed to find DataFrame")
+        #     return pd.DataFrame() # Return empty DataFrame
+
+        # # Drop rows with NULL values
+        # #df = df.dropna()
+
+        # # Change 'card_number' column into 'int64' dtype
+        # df['card_number'] = df['card_number'].astype('int64')
+
+        # # Change 'card_provider' column into 'str' dtype
+        # df['card_provider'] = df['card_provider'].astype('string')
+
+        # # Change columns containing dates into 'datetime64' dtype
+        # date_columns = ['expiry_date', 'date_payment_confirmed']
+        # for column in date_columns:
+        #     df[column] = pd.to_datetime(df[column], errors='coerce')
+        # for column in date_columns:
+        #     df[column] = df[column].dt.date     # Extract only the date part
         
-        try:
-
-            # Drop rows with NULL values
-            df = df.dropna()
-
-            # Change 'card_number' column into 'int64' dtype
-            df['card_number'] = df['card_number'].astype('int64')
-
-            # Change 'card_provider' column into 'str' dtype
-            df['card_provider'] = df['card_provider'].astype('string')
-
-            # Change columns containing dates into 'datetime64' dtype
-            date_columns = ['expiry_date', 'date_payment_confirmed']
-            for column in date_columns:
-                df[column] = pd.to_datetime(df[column], errors='coerce')
-            for column in date_columns:
-                df[column] = df[column].dt.date     # Extract only the date part
-        
-            # Drop rows with invalid dates
-            df = df.dropna(subset=date_columns)
-            print("DataFrame cleaning operation completed.")
-
-            return df
-        except Exception as e:
-            print(f"Error cleaning DataFrame: {e}")
-            return pd.DataFrame() # Return empty DataFrame if error
+        # # Drop rows with invalid dates
+        # #df = df.dropna(subset=date_columns)
+        print("DataFrame cleaning operation completed.")
+        return df
 
 
 
