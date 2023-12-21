@@ -2,6 +2,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from database_utils import DatabaseConnector
 import tabula
+import boto3
+import requests
 
 class DataExtractor:
     def __init__(self):
@@ -51,7 +53,7 @@ class DataExtractor:
         
         try:
             # Set JVM options for tabula-py
-            java_options = "-Djava.awt.headless=true -XX:ReservedCodeCacheSize=1000m"
+            java_options = "-Djava.awt.headless=true -XX:ReservedCodeCacheSize=96mb"
             tabula._java_options = java_options.split()
 
             # read_pdf returns list of DataFrames
@@ -65,11 +67,33 @@ class DataExtractor:
         except Exception as e:
             print(f"Error reading pdf: {e}")
             return pd.DataFrame() # Return empty DataFrame if error
+        
+    def list_number_of_stores(self, url, headers):
+        response = requests.get(url, headers=headers)
+        print("Status Code:", response.status_code)
+        if response.status_code == 200:
+            # Assuming the API returns a JSON object with the number of stores under a key
+            number_stores = response.json().get('number_stores')
+            print(response.json())
+            return number_stores
+        else:
+            # Handle errors (e.g., API not reachable, wrong credentials, etc.)
+            print(f"Error: {response.status_code}")
+            return None
+        
+    def retrieve_stores_data(self, base_url, headers):
+        number_of_stores = self.list_number_of_stores(url='https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores', headers=headers)
+        all_stores_data = []
 
+        for store_number in range(1, number_of_stores + 1):
+            store_url = f"{base_url}/{store_number}"  # Construct the URL for each store
+            response = requests.get(store_url, headers=headers)
+            if response.status_code == 200:
+                store_data = response.json()
+                all_stores_data.append(store_data)
+            else:
+                print(f"Error retrieving store {store_number}: {response.status_code}")
 
-if __name__ == '__main__':
-    data_extractor = DataExtractor()
-    pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
-    pdf_df = data_extractor.retrieve_pdf_data(pdf_path)
-    #print(pdf_df)
-    print(pdf_df.describe())
+        df = pd.DataFrame(all_stores_data)
+        return df
+    

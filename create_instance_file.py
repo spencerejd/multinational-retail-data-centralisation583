@@ -11,7 +11,7 @@ data_extractor = DataExtractor()
 # Extract data from table 'legacy_users' and store it in a DataFrame
 df = data_extractor.read_rds_table(database_engine, 'legacy_users')
 # Create an instance of the DataCleaning class, with our DataFrame passed as an argument
-data_cleaner = DataCleaning()
+data_cleaner = DataCleaning(df)
 # Clean the DataFrame
 cleaned_df = data_cleaner.clean_user_data(df)
 
