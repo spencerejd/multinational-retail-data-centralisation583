@@ -98,6 +98,7 @@ class DataCleaning:
         print("Commencing 'opening_date' column conversion into 'datetime64' dtype")
         # Change 'opening_date' column into 'datetime64' dtype
         self.df['opening_date'] = pd.to_datetime(self.df['opening_date'], errors='coerce')
+        self.df['opening_date'] = self.df['opening_date'].dt.date
 
         # Change 'staff_numbers' column into a numeric dtype
         self.df['staff_numbers'] = pd.to_numeric(self.df['staff_numbers'], errors='coerce')

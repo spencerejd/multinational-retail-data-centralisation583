@@ -1,6 +1,7 @@
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 import pandas as pd
+from database_utils import DatabaseConnector
 
 # Usage example
 
@@ -39,4 +40,13 @@ cleaner = DataCleaning(stores_df)
 clean_stores_df = cleaner.clean_store_data()
 
 clean_stores_df.info()
-clean_stores_df
+
+# Now let's initialise the engine that we will upload our DataFrame to
+
+# Create an instance of the DatabaseConnector class
+database = DatabaseConnector()
+# We will set the 'yaml_file_path' to ensure the connection is made to the upload database engine
+upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml')
+
+# Upload 'cleaned_df' to our initialised engine
+database.upload_to_db(clean_stores_df, table_name='dim_store_details')
