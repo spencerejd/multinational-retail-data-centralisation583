@@ -4,6 +4,7 @@ from database_utils import DatabaseConnector
 import tabula
 import boto3
 import requests
+from io import StringIO, BytesIO
 
 class DataExtractor:
     def __init__(self):
@@ -95,5 +96,27 @@ class DataExtractor:
                 print(f"Error retrieving store {store_number}: {response.status_code}")
 
         df = pd.DataFrame(all_stores_data)
+        return df
+    
+    def extract_from_s3(self, s3_path):
+        # Split the S3 path to get the bucket name and file key
+        bucket_name, file_key = s3_path.replace("s3://", "").split("/", 1)
+
+        # Create an S3 client using boto3
+        s3_client = boto3.client('s3')
+
+        # Retrieve the file from the specified S3 bucket
+        obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+
+        # Determine the file type (extension)
+        if s3_path.endswith('.csv'):
+            # Read CSV file content into a pandas DataFrame
+            df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')))
+        elif s3_path.endswith('.json'):
+            # Read JSON file content into a pandas DataFrame
+            df = pd.read_json(BytesIO(obj['Body'].read()))
+        else:
+            raise ValueError("Unsupported file format")
+        
         return df
     
