@@ -24,12 +24,12 @@ import pandas as pd
 orders_df = pd.read_csv('orders_data.csv')
 
 # Initialise DataCleaning, passing df as an argument
+orders_df.info()
 cleaner = DataCleaning(orders_df)
 cleaned_orders_df = cleaner.clean_orders_data()
 
-print(cleaned_orders_df)
+#print(cleaned_orders_df)
 cleaned_orders_df.info()
-print("Unique product quantities:", cleaned_orders_df['product_quantity'].unique())
 
 
 # Now let's initialise the engine that we will upload our DataFrame to

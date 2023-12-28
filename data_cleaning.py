@@ -87,16 +87,17 @@ class DataCleaning:
         '''
         print("DataFrame cleaning operation initiated.")
 
-        # Drop rows with NULL values
-        self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
+        # Set the index column
+        self.df.set_index('index', inplace=True)
 
-        # Change longitude and latitude columns into 'float' dtype
-        coordinate_columns = ['longitude', 'latitude']
+        # # Drop rows with NULL values
+        # self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
+
+        # # Change longitude and latitude columns into 'numeric' values
+        coordinate_columns = ['longitude', 'latitude', 'lat']
         for column in coordinate_columns:
             self.df[column] = pd.to_numeric(self.df[column], errors='coerce')
         
-        print(self.df.info())
-        print("Commencing 'opening_date' column conversion into 'datetime64' dtype")
         # Change 'opening_date' column into 'datetime64' dtype
         self.df['opening_date'] = pd.to_datetime(self.df['opening_date'], errors='coerce')
         self.df['opening_date'] = self.df['opening_date'].dt.date
@@ -104,25 +105,25 @@ class DataCleaning:
         # Change 'staff_numbers' column into a numeric dtype
         self.df['staff_numbers'] = pd.to_numeric(self.df['staff_numbers'], errors='coerce')
 
-        # Drop NaN rows in 'staff_numbers' column
-        self.df.dropna(subset=['staff_numbers'], inplace=True)
+        # # Drop NaN rows in 'staff_numbers' column
+        # self.df.dropna(subset=['staff_numbers'], inplace=True)
         # Convert 'staff_numbers' column into 'int' from float
-        self.df['staff_numbers'] = self.df['staff_numbers'].astype(int)
+        # self.df['staff_numbers'] = self.df['staff_numbers'].astype(int)
         
-        # Change columns containing text into string dtype
-        text_columns = ['address', 'locality', 'store_code', 'store_type', 'country_code', 'continent']
-        for column in text_columns:
-            self.df[column] = self.df[column].astype('string')
+        # # Change columns containing text into string dtype
+        # text_columns = ['address', 'locality', 'store_code', 'store_type', 'country_code', 'continent']
+        # for column in text_columns:
+        #     self.df[column] = self.df[column].astype('string')
         
         # Replace incorrect values in 'country_code' column
         self.df['continent'] = self.df['continent'].replace({'eeEurope': 'Europe'})
         self.df['continent'] = self.df['continent'].replace({'eeAmerica': 'America'})
         
         # Drop the 'lat' column
-        self.df.drop('lat', axis=1, inplace=True)
+        # self.df.drop('lat', axis=1, inplace=True)
 
         # Drop rows with NULL values
-        self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
+        # self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
 
         
         return self.df
@@ -210,10 +211,10 @@ class DataCleaning:
         self.df.drop(columns=remove_columns, inplace=True, errors='ignore')
 
         # Convert 'card_number' into numeric
-        self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce')
+        # self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce')
 
         # Convert columns to string dtype
-        string_columns = ['date_uuid', 'user_uuid', 'store_code', 'product_code']
+        string_columns = ['date_uuid', 'user_uuid', 'store_code', 'product_code', 'card_number']
         for column in string_columns:
             self.df[column] = self.df[column].astype('string')
 

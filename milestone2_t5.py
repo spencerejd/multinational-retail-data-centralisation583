@@ -31,14 +31,14 @@ from database_utils import DatabaseConnector
 #print(stores_df)
 
 stores_df = pd.read_csv('stores_data.csv')
-#stores_df.info()
+stores_df.info()
 
 # Create an instance of the DataCleaning class, passing our DataFrame as an argument
 cleaner = DataCleaning(stores_df)
 
 # Clean the stores_df DataFrame
 clean_stores_df = cleaner.clean_store_data()
-
+print(clean_stores_df.head())
 clean_stores_df.info()
 
 # Now let's initialise the engine that we will upload our DataFrame to
