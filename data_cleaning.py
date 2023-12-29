@@ -56,27 +56,27 @@ class DataCleaning:
 
         # Remove non-numeric characters from 'card_number' column
         self.df['card_number'] = self.df['card_number'].str.replace('[^0-9]', '', regex=True)
-        # Convert 'card_number' to numeric, coerce errors to NaN
-        self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce') # From 15254 to 2464 non-nulls - I suspect it's removing more rows than expected... return to this
         # Drop any rows that now have NaN in 'card_number'
         self.df.dropna(subset=['card_number'], inplace=True)
-        # Change 'card_number' column into 'int64' dtype
-        self.df['card_number'] = self.df['card_number'].astype('int64')
+        # # Convert 'card_number' to numeric, coerce errors to NaN
+        # self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce') # From 15254 to 2464 non-nulls - I suspect it's removing more rows than expected... return to this
+        # # Change 'card_number' column into 'int64' dtype
+        # self.df['card_number'] = self.df['card_number'].astype('int64')
 
         # Change 'card_provider' column into 'str' dtype
         self.df['card_provider'] = self.df['card_provider'].astype('string')
 
         # Change columns containing dates into 'datetime64' dtype
-        date_columns = ['expiry_date', 'date_payment_confirmed']
-        for column in date_columns:
-            self.df[column] = pd.to_datetime(self.df[column], errors='coerce')
-        for column in date_columns:
-            self.df[column] = self.df[column].dt.date     # Extract only the date part
+        self.df['date_payment_confirmed'] = pd.to_datetime(self.df['date_payment_confirmed'], errors='coerce')
+        self.df['date_payment_confirmed'] = self.df['date_payment_confirmed'].dt.date     # Extract only the date part
         
         # Drop rows with invalid dates
-        self.df.dropna(subset=date_columns, inplace=True)
+        self.df.dropna(subset='date_payment_confirmed', inplace=True)
 
         self.df.drop(columns=['card_number expiry_date', 'Unnamed: 0'], inplace=True)
+
+        # Drop rows with NULL values
+        self.df.dropna(subset=['card_number', 'expiry_date', 'card_provider', 'date_payment_confirmed'], inplace=True)
 
         print("DataFrame cleaning operation completed.")
         return self.df
@@ -140,9 +140,6 @@ class DataCleaning:
         self.df['product_price'] = self.df['product_price'].str.replace('£', '').str.replace(',', '')
         # Convert the column to float, setting unparseable strings to NaN
         self.df['product_price'] = pd.to_numeric(self.df['product_price'], errors='coerce')
-
-        # Convert EAN to numeric type
-        self.df['EAN'] = pd.to_numeric(self.df['EAN'], errors='coerce')
 
         # Drop rows with NULL values
         self.df.dropna(subset=['product_price', 'weight', 'EAN', 'date_added', 'product_name', 'category', 'uuid', 'removed', 'product_code'], inplace=True)
