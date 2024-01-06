@@ -86,7 +86,7 @@ class DataExtractor:
         number_of_stores = self.list_number_of_stores(url='https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores', headers=headers)
         all_stores_data = []
 
-        for store_number in range(1, number_of_stores + 1):
+        for store_number in range(0, number_of_stores + 1):
             store_url = f"{base_url}/{store_number}"  # Construct the URL for each store
             response = requests.get(store_url, headers=headers)
             if response.status_code == 200:
