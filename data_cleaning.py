@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from database_utils import DatabaseConnector
 from data_extraction import DataExtractor
 import re
+import numpy as np
 
 
 class DataCleaning:
@@ -21,65 +22,113 @@ class DataCleaning:
         # Set 'index' as index of the DataFrame
         df.set_index('index', inplace=True)
 
-        # Drop rows with NULL values
-        df = df.dropna()
+        # Drop rows filled with NULL values
+        df = df.dropna(how='all')
 
-        # Change columns containing strings into 'string' dtype
-        string_columns = ['first_name', 'last_name', 'company', 'email_address', 'address', 'country', 'country_code', 'phone_number', 'user_uuid']
-        df[string_columns] = df[string_columns].astype('string')
+        df = df.drop_duplicates()
 
-        # Change columns containing dates into 'datetime64' dtype
-        date_columns = ['date_of_birth', 'join_date']
-        for column in date_columns:
-            df[column] = pd.to_datetime(df[column], errors='coerce')
-        for column in date_columns:
-            df[column] = df[column].dt.date     # Extract only the date part
-        
-        # Drop rows with invalid dates
-        df = df.dropna(subset=date_columns)
+        # Define a list of date formats to try
+        date_formats = ["%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y", "%Y %B %d", "%B %Y %d"]
+
+        # Lists to store entries that couldn't be parsed
+        date_of_birth_errors = []
+        join_date_errors = []
+
+        # Function to try parsing date with different formats
+        def parse_date(date_str, error_list):
+            for fmt in date_formats:
+                try:
+                    return pd.to_datetime(date_str, format=fmt)
+                except (ValueError, TypeError):
+                    continue
+            error_list.append(date_str)
+            return np.nan
+
+        # Apply the custom parsing to 'date_of_birth' and 'join_date'
+        df['date_of_birth'] = df['date_of_birth'].apply(lambda x: parse_date(x, date_of_birth_errors))
+        df['join_date'] = df['join_date'].apply(lambda x: parse_date(x, join_date_errors))
 
         # Replace incorrect values in 'country_code' column
         df['country_code'] = df['country_code'].replace({'GGB': 'GB'})
+        # List of valid country codes
+        valid_country_codes = ['GB', 'DE', 'US']
+
+        # Replace invalid country codes with NaN
+        df['country_code'] = df['country_code'].apply(lambda x: x if x in valid_country_codes else np.nan)
+
+        # Convert entire rows to NaN if any cell in the row is NaN
+        df = df.apply(lambda row: row if not row.isna().any() else [np.nan]*len(row), axis=1)
+
+        # Drop rows filled with NULL values
+        df = df.dropna(how='all')
 
         print("DataFrame cleaned successfully.")
 
         return df
-    
+
+
     def clean_card_data(self):
         '''
         Clean the card data from the specified DataFrame.
         '''
         print("DataFrame cleaning operation initiated.")
+        cleaned_df = self.df
 
-        # Drop rows with NULL values
-        self.df.dropna(subset=['card_number', 'expiry_date', 'card_provider', 'date_payment_confirmed'], inplace=True)
+        # Drop rows filled with NULL values
+        cleaned_df = cleaned_df.dropna(how='all')
 
-        # Remove non-numeric characters from 'card_number' column
-        self.df['card_number'] = self.df['card_number'].str.replace('[^0-9]', '', regex=True)
-        # Drop any rows that now have NaN in 'card_number'
-        self.df.dropna(subset=['card_number'], inplace=True)
-        # # Convert 'card_number' to numeric, coerce errors to NaN
-        # self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce') # From 15254 to 2464 non-nulls - I suspect it's removing more rows than expected... return to this
-        # # Change 'card_number' column into 'int64' dtype
-        # self.df['card_number'] = self.df['card_number'].astype('int64')
+        # Define a list of date formats to try
+        date_formats = ["%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y", "%Y %B %d", "%B %Y %d"]
 
-        # Change 'card_provider' column into 'str' dtype
-        self.df['card_provider'] = self.df['card_provider'].astype('string')
+        # Lists to store entries that couldn't be parsed
+        date_payment_confirmed_errors = []
 
-        # Change columns containing dates into 'datetime64' dtype
-        self.df['date_payment_confirmed'] = pd.to_datetime(self.df['date_payment_confirmed'], errors='coerce')
-        self.df['date_payment_confirmed'] = self.df['date_payment_confirmed'].dt.date     # Extract only the date part
+        # Function to try parsing date with different formats
+        def parse_date(date_str, error_list):
+            for fmt in date_formats:
+                try:
+                    return pd.to_datetime(date_str, format=fmt)
+                except (ValueError, TypeError):
+                    continue
+            error_list.append(date_str)
+            return np.nan
         
-        # Drop rows with invalid dates
-        self.df.dropna(subset='date_payment_confirmed', inplace=True)
+        # List of invalid payment dates
+        invalid_payment_dates = ['XTD27ANR5Q', 'WCK463ZO1Z', 'UZGSD0AEBT', 'T995FX2C7W', 'T008RE1ZR6', 
+                             'RLQYRRYHPU', 'OE3KONN2V6', 'H2PCQP4W50', 'GTC9KBWJO9', 'GD9PHJXQR4', 
+                             'EVVMMB3QYV', 'DJIXF1AFAZ', '7VGB4DA1WI', '7FL8EU9GBF', 'NULL']
+        
+        # Set 'date_payment_confirmed' to None for invalid values
+        cleaned_df.loc[cleaned_df['date_payment_confirmed'].isin(invalid_payment_dates), 'date_payment_confirmed'] = None
 
-        self.df.drop(columns=['card_number expiry_date', 'Unnamed: 0'], inplace=True)
+        # Drop rows with NULL 'date_payment_confirmed'
+        cleaned_df.dropna(subset=['date_payment_confirmed'], inplace=True)
 
-        # Drop rows with NULL values
-        self.df.dropna(subset=['card_number', 'expiry_date', 'card_provider', 'date_payment_confirmed'], inplace=True)
+        # Process rows where 'card_number' is null and 'card_number expiry_date' is not null
+        card_mask = cleaned_df['card_number'].isnull() & cleaned_df['card_number expiry_date'].notnull()
+
+        # Extract card number from 'card_number expiry_date' and assign it to 'card_number'
+        cleaned_df.loc[card_mask, 'card_number'] = cleaned_df.loc[card_mask, 'card_number expiry_date'].str.split().str[0]
+
+        # Process rows where 'expiry_date' is null and 'card_number expiry_date' is not null
+        expiry_mask = cleaned_df['expiry_date'].isnull() & cleaned_df['card_number expiry_date'].notnull()
+
+        # Extract expiry_date from 'card_number expiry_date' and assign it to 'expiry_date'
+        cleaned_df.loc[expiry_mask, 'expiry_date'] = cleaned_df.loc[expiry_mask, 'card_number expiry_date'].str.split().str[1]
+
+        # # Drop rows with NULL card numbers
+        # cleaned_df.dropna(subset='card_number', inplace=True)
+
+        # Convert all entries in 'card_number' column into string
+        cleaned_df['card_number'] = cleaned_df['card_number'].astype(str)
+
+        # Remove question marks at the beginning of card numbers
+        cleaned_df['card_number'] = cleaned_df['card_number'].str.lstrip('?')
+
+        cleaned_df.drop(columns=['card_number expiry_date', 'Unnamed: 0'], inplace=True)              
 
         print("DataFrame cleaning operation completed.")
-        return self.df
+        return cleaned_df
     
     def clean_store_data(self):
         '''
@@ -89,69 +138,64 @@ class DataCleaning:
 
         # Set the index column
         self.df.set_index('index', inplace=True)
-
-        # # Drop rows with NULL values
-        # self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
-
-        # # Change longitude and latitude columns into 'numeric' values
-        coordinate_columns = ['longitude', 'latitude', 'lat']
-        for column in coordinate_columns:
-            self.df[column] = pd.to_numeric(self.df[column], errors='coerce')
         
-        # Change 'opening_date' column into 'datetime64' dtype
-        self.df['opening_date'] = pd.to_datetime(self.df['opening_date'], errors='coerce')
-        self.df['opening_date'] = self.df['opening_date'].dt.date
-
-        # Change 'staff_numbers' column into a numeric dtype
-        self.df['staff_numbers'] = pd.to_numeric(self.df['staff_numbers'], errors='coerce')
-
-        # # Drop NaN rows in 'staff_numbers' column
-        # self.df.dropna(subset=['staff_numbers'], inplace=True)
-        # Convert 'staff_numbers' column into 'int' from float
-        # self.df['staff_numbers'] = self.df['staff_numbers'].astype(int)
-        
-        # # Change columns containing text into string dtype
-        # text_columns = ['address', 'locality', 'store_code', 'store_type', 'country_code', 'continent']
-        # for column in text_columns:
-        #     self.df[column] = self.df[column].astype('string')
-        
-        # Replace incorrect values in 'country_code' column
+        # Replace incorrect values in 'continent' column
         self.df['continent'] = self.df['continent'].replace({'eeEurope': 'Europe'})
         self.df['continent'] = self.df['continent'].replace({'eeAmerica': 'America'})
-        
-        # Drop the 'lat' column
-        # self.df.drop('lat', axis=1, inplace=True)
 
-        # Drop rows with NULL values
-        # self.df.dropna(subset=['address', 'longitude', 'locality', 'store_code', 'staff_numbers', 'opening_date', 'store_type', 'latitude', 'country_code', 'continent'], inplace=True)
+        # # Replace values in 'country_code' with None if they are not 'GB', 'DE' or 'US'
+        # self.df.loc[~self.df['country_code'].isin(['GB', 'DE', 'US']), 'country_code'] = None
+
+        # Replace any alphabetical characters in 'staff_numbers' with an empty string
+        self.df['staff_numbers'] = self.df['staff_numbers'].str.replace('[a-zA-Z]', '', regex=True)
+
+        # Set 'store_code' to None where the length of the string is smaller than 11
+        self.df.loc[self.df['store_code'].str.len() < 11, 'store_code'] = None
+
+        # Drop rows with NULL values
+        self.df.dropna(subset=['store_code'], inplace=True)
 
         
         return self.df
     
     def clean_products_data(self):
 
-        print("Commencing DataFrame cleaning!")
+        print("Commencing DataFrame cleaning.")
+
+        # Drop rows filled with NULL values
+        self.df = self.df.dropna(how='all')
+
         # Change 'date_added' column into 'datetime64' dtype
-        self.df['date_added'] = pd.to_datetime(self.df['date_added'], errors='coerce')
-        self.df['date_added'] = self.df['date_added'].dt.date
+        # self.df['date_added'] = pd.to_datetime(self.df['date_added'], errors='coerce')
+        # self.df['date_added'] = self.df['date_added'].dt.date
         
-        # Change 'product_price' to float
-        # Remove the '£' symbol and any commas
-        self.df['product_price'] = self.df['product_price'].str.replace('£', '').str.replace(',', '')
-        # Convert the column to float, setting unparseable strings to NaN
-        self.df['product_price'] = pd.to_numeric(self.df['product_price'], errors='coerce')
+        # # Change 'product_price' to float
+        # # Remove the '£' symbol and any commas
+        # self.df['product_price'] = self.df['product_price'].str.replace('£', '').str.replace(',', '')
+        # # Convert the column to float, setting unparseable strings to NaN
+        # self.df['product_price'] = pd.to_numeric(self.df['product_price'], errors='coerce')
 
-        # Drop rows with NULL values
-        self.df.dropna(subset=['product_price', 'weight', 'EAN', 'date_added', 'product_name', 'category', 'uuid', 'removed', 'product_code'], inplace=True)
-
-        # Convert specified columns to string dtype
-        string_columns = ['product_name', 'category', 'uuid', 'removed', 'product_code']
-        for column in string_columns:
-            self.df[column] = self.df[column].astype('string')
+        # # Convert specified columns to string dtype
+        # string_columns = ['product_name', 'category', 'uuid', 'removed', 'product_code']
+        # for column in string_columns:
+        #     self.df[column] = self.df[column].astype('string')
         
         # Drop the 'Unnamed: 0' column
         self.df.drop('Unnamed: 0', axis=1, inplace=True)
-        print('DataFrame has now been cleaned!')
+
+        # Drop rows where 'product_name' is 'VLPCU81M30'
+        self.df = self.df[self.df['product_name'] != 'VLPCU81M30']
+
+        # Update 'weight' column where 'product_code' is 'A8-4686892S'
+        self.df.loc[self.df['product_code'] == 'A8-4686892S', 'weight'] = 0.4535
+
+        # Drop rows with NULL values in weight
+        self.df.dropna(subset=['weight'], inplace=True)
+
+        # Drop rows filled with NULL values
+        self.df = self.df.dropna(how='all')
+
+        print('DataFrame has now been cleaned.')
 
         return self.df
 
