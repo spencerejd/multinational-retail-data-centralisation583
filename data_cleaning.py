@@ -116,9 +116,6 @@ class DataCleaning:
         # Extract expiry_date from 'card_number expiry_date' and assign it to 'expiry_date'
         cleaned_df.loc[expiry_mask, 'expiry_date'] = cleaned_df.loc[expiry_mask, 'card_number expiry_date'].str.split().str[1]
 
-        # # Drop rows with NULL card numbers
-        # cleaned_df.dropna(subset='card_number', inplace=True)
-
         # Convert all entries in 'card_number' column into string
         cleaned_df['card_number'] = cleaned_df['card_number'].astype(str)
 
@@ -143,9 +140,6 @@ class DataCleaning:
         self.df['continent'] = self.df['continent'].replace({'eeEurope': 'Europe'})
         self.df['continent'] = self.df['continent'].replace({'eeAmerica': 'America'})
 
-        # # Replace values in 'country_code' with None if they are not 'GB', 'DE' or 'US'
-        # self.df.loc[~self.df['country_code'].isin(['GB', 'DE', 'US']), 'country_code'] = None
-
         # Replace any alphabetical characters in 'staff_numbers' with an empty string
         self.df['staff_numbers'] = self.df['staff_numbers'].str.replace('[a-zA-Z]', '', regex=True)
 
@@ -164,21 +158,6 @@ class DataCleaning:
 
         # Drop rows filled with NULL values
         self.df = self.df.dropna(how='all')
-
-        # Change 'date_added' column into 'datetime64' dtype
-        # self.df['date_added'] = pd.to_datetime(self.df['date_added'], errors='coerce')
-        # self.df['date_added'] = self.df['date_added'].dt.date
-        
-        # # Change 'product_price' to float
-        # # Remove the '£' symbol and any commas
-        # self.df['product_price'] = self.df['product_price'].str.replace('£', '').str.replace(',', '')
-        # # Convert the column to float, setting unparseable strings to NaN
-        # self.df['product_price'] = pd.to_numeric(self.df['product_price'], errors='coerce')
-
-        # # Convert specified columns to string dtype
-        # string_columns = ['product_name', 'category', 'uuid', 'removed', 'product_code']
-        # for column in string_columns:
-        #     self.df[column] = self.df[column].astype('string')
         
         # Drop the 'Unnamed: 0' column
         self.df.drop('Unnamed: 0', axis=1, inplace=True)
@@ -250,9 +229,6 @@ class DataCleaning:
     def clean_orders_data(self):
         remove_columns = ['first_name', 'last_name', '1']  # Adjust if needed
         self.df.drop(columns=remove_columns, inplace=True, errors='ignore')
-
-        # Convert 'card_number' into numeric
-        # self.df['card_number'] = pd.to_numeric(self.df['card_number'], errors='coerce')
 
         # Convert columns to string dtype
         string_columns = ['date_uuid', 'user_uuid', 'store_code', 'product_code', 'card_number']
