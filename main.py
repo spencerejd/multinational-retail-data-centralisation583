@@ -252,7 +252,7 @@ try:
             ALTER COLUMN continent TYPE VARCHAR(255);
         """)
 
-    # Handle NULL Values
+        # Handle NULL Values
     with connection.cursor() as cursor:
         # Update string columns
         text_columns_to_update = ['locality', 'store_code', 'store_type', 'country_code', 'continent']
@@ -271,10 +271,76 @@ try:
             WHERE longitude IS NULL OR latitude IS NULL;
         """)
 
+    # Modify dim_products table: update product_price column
+    with connection.cursor() as cursor:
+
+        # Remove the '£' character from product_price
+        cursor.execute("""
+            UPDATE dim_products
+            SET product_price = REPLACE(product_price, '£', '');
+                       """)
+
+        # Add the weight_class column
+        cursor.execute("""
+            ALTER TABLE dim_products
+            ADD COLUMN weight_class VARCHAR(255);
+        """)
+
+        # Populate the weight_class column
+        cursor.execute("""
+            UPDATE dim_products
+            SET weight_class = CASE
+                WHEN weight < 2 THEN 'Light'
+                WHEN weight >= 2 AND weight < 40 THEN 'Mid_Sized'
+                WHEN weight >= 40 AND weight < 140 THEN 'Heavy'
+                WHEN weight >= 140 THEN 'Truck_Required'
+                ELSE 'Unknown'
+            END;
+        """)
+
+    # Modify dim_products table: rename removed column
+    with connection.cursor() as cursor:
+        # Rename column
+        cursor.execute("ALTER TABLE dim_products RENAME COLUMN removed TO still_available")
+
+    # Modify dim_products table: cast columns to the required data types
+    with connection.cursor() as cursor:
+        # Find the max length for the objects contained within the following columns
+        cursor.execute("""
+            SELECT
+                MAX(LENGTH("EAN")) AS max_EAN,
+                MAX(LENGTH(product_code)) AS max_product_code,
+                MAX(LENGTH(weight_class)) AS max_weight_class
+            FROM dim_products
+        """)
+        max_lengths = cursor.fetchone()
+        print(max_lengths)
+    
+    with connection.cursor() as cursor:
+        # Transform 'still_available' column for appropriate interpretation as boolean
+        cursor.execute("""
+            UPDATE dim_products
+            SET still_available = CASE
+                WHEN still_available = 'Still_avaliable' THEN 'true'
+                WHEN still_available = 'Removed' THEN 'false'
+            END;
+                       """)
+
+    with connection.cursor() as cursor:
+        # Alter columns
+        cursor.execute("ALTER TABLE dim_products ALTER COLUMN product_price TYPE FLOAT USING product_price::FLOAT")
+        cursor.execute("ALTER TABLE dim_products ALTER COLUMN weight TYPE FLOAT USING weight::FLOAT")
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN "EAN" TYPE VARCHAR(%s) USING "EAN"::VARCHAR(%s);',(max_lengths[0], max_lengths[0]))
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN product_code TYPE VARCHAR(%s) USING product_code::VARCHAR(%s);',(max_lengths[1], max_lengths[1]))
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN date_added TYPE DATE USING date_added::DATE;')
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN uuid TYPE UUID USING uuid::UUID;')
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN still_available TYPE BOOL USING still_available::BOOL')
+        cursor.execute('ALTER TABLE dim_products ALTER COLUMN weight_class TYPE VARCHAR(%s) USING weight_class::VARCHAR(%s);',(max_lengths[2], max_lengths[2]))
+
+
         # Commit the transaction
         connection.commit()
         print("Task 1: Data types in orders_table altered successfully.")
-    
 
 except Exception as e:
     print(f"Error: {e}")
