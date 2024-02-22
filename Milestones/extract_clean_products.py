@@ -1,28 +1,22 @@
 import boto3
 import pandas as pd
-from data_extraction import DataExtractor
-from data_cleaning import DataCleaning
-from database_utils import DatabaseConnector
+from scripts.data_extraction import DataExtractor
+from scripts.data_cleaning import DataCleaning
+from scripts.database_utils import DatabaseConnector
 
 # Extract product information from s3 address and return a pandas DataFrame
 
-# extractor = DataExtractor()
-# s3_path = "s3://data-handling-public/products.csv"
-# products_df = extractor.extract_from_s3(s3_path)
-# #print(products_df)
-# products_df.to_csv('products.csv', index=False)
-
-products_df = pd.read_csv('products.csv')
+extractor = DataExtractor()
+s3_path = "s3://data-handling-public/products.csv"
+products_df = extractor.extract_from_s3(s3_path)
 
 # Create an instance of the DataCleaning class
 cleaner = DataCleaning(products_df)
 # Convert the product weights into kg
 clean_1_products_df = cleaner.convert_product_weights()
 
-
 # Clean the 'products_df'
 clean2_products_df = cleaner.clean_products_data()
-
 
 # Now let's initialise the engine that we will upload our DataFrame to
 
