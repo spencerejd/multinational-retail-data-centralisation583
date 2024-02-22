@@ -226,6 +226,13 @@ try:
         ]
         for command in alter_commands:
             cursor.execute(command)
+        
+    # Add primary key to dim_users
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_users
+            ADD PRIMARY KEY (user_uuid);
+                       """)
 
     # Modify dim_store_details table
         
@@ -270,6 +277,13 @@ try:
                 latitude = COALESCE(latitude, 0.0)
             WHERE longitude IS NULL OR latitude IS NULL;
         """)
+    
+    # Add primary key to dim_store_details
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_store_details
+            ADD PRIMARY KEY (store_code);
+                       """)
 
     # Modify dim_products table: update product_price column
     with connection.cursor() as cursor:
@@ -337,6 +351,13 @@ try:
         cursor.execute('ALTER TABLE dim_products ALTER COLUMN still_available TYPE BOOL USING still_available::BOOL')
         cursor.execute('ALTER TABLE dim_products ALTER COLUMN weight_class TYPE VARCHAR(%s) USING weight_class::VARCHAR(%s);',(max_lengths[2], max_lengths[2]))
 
+    # Add primary key to dim_products
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_products
+            ADD PRIMARY KEY (product_code);
+                       """)
+
 
     # Modify dim_date_times table schema
     with connection.cursor() as cursor:
@@ -349,6 +370,13 @@ try:
             ALTER COLUMN date_uuid TYPE UUID USING date_uuid::UUID;
 
             """)
+        
+    # Add primary key to dim_date_times
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_date_times
+            ADD PRIMARY KEY (date_uuid);
+                       """)
 
     # Modify the dim_card_details table
     with connection.cursor() as cursor:
@@ -365,10 +393,17 @@ try:
         cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN card_number TYPE VARCHAR(%s);", (max_lengths[0],))
         cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN expiry_date TYPE VARCHAR(%s);", (max_lengths[1],))
         cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN date_payment_confirmed TYPE DATE USING date_payment_confirmed::DATE;")
-            
+
+    # Add primary key to dim_card_details
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_card_details
+            ADD PRIMARY KEY (card_number);
+                       """)
+        
         # Commit the transaction
         connection.commit()
-        print("Data types in sales_data database tables altered successfully.")
+        print("Data types and primary keys in sales_data database tables altered successfully.")
 
 except Exception as e:
     print(f"Error: {e}")
@@ -379,5 +414,7 @@ finally:
         connection.close()
         
         print("Connection closed")
+
+
 
 
