@@ -60,3 +60,31 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 # Upload 'cleaned__pdf_df' to our initialised engine
 database.upload_to_db(clean_pdf_df, table_name='dim_card_details')
 
+
+# Create the DataFrame which will contain the store_details
+
+# Define the base URL for the API endpoint that retrieves details of a specific store
+base_url = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details'
+# Define the headers for the API request, including the API key for authentication
+headers = {'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'}
+
+# Use the retrieve_stores_data method to fetch data for all stores and save to DataFrame
+# This method iterates over store numbers, makes API calls for each, and collects the data
+stores_df = data_extractor.retrieve_stores_data(base_url, headers)
+
+# Create an instance of the DataCleaning class, passing store_details DataFrame as an argument
+cleaner = DataCleaning(stores_df)
+
+# Clean the stores_df DataFrame
+clean_stores_df = cleaner.clean_store_data()
+
+# Now let's initialise the engine that we will upload our store_details DataFrame to
+
+# Create an instance of the DatabaseConnector class
+database = DatabaseConnector()
+# We will set the 'yaml_file_path' to ensure the connection is made to the upload database engine
+upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml')
+
+# Upload 'clean_stores_df' to our initialised engine
+database.upload_to_db(clean_stores_df, table_name='dim_store_details')
+
