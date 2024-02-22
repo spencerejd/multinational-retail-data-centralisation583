@@ -174,6 +174,7 @@ database.upload_to_db(date_details_df, table_name='dim_date_times')
 
 # Create the database schema
 
+# Cast the columns of the orders_table to correct data types
 # Load database credentials from YAML file
 with open('rds_upload_db_creds.yaml', 'r') as file:
     creds = yaml.safe_load(file)
@@ -190,7 +191,7 @@ try:
     if connection:
         print (f"Connected to {creds['RDS_DATABASE']} database")
     
-    # Task 1: Modify orders_table
+    # Modify orders_table
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT MAX(LENGTH(card_number)) AS max_card_number_length,
@@ -210,6 +211,22 @@ try:
         cursor.execute("ALTER TABLE orders_table ALTER COLUMN product_code TYPE VARCHAR(%s);", (max_lengths[2],))
         cursor.execute("ALTER TABLE orders_table ALTER COLUMN product_quantity TYPE SMALLINT USING product_quantity::SMALLINT;")
 
+
+    # Modify dim_users table
+
+    with connection.cursor() as cursor:
+        # Execute ALTER TABLE commands
+        alter_commands = [
+            "ALTER TABLE dim_users ALTER COLUMN first_name TYPE VARCHAR(255);",
+            "ALTER TABLE dim_users ALTER COLUMN last_name TYPE VARCHAR(255);",
+            "ALTER TABLE dim_users ALTER COLUMN date_of_birth TYPE DATE USING date_of_birth::DATE;",
+            "ALTER TABLE dim_users ALTER COLUMN country_code TYPE VARCHAR(2);",
+            "ALTER TABLE dim_users ALTER COLUMN user_uuid TYPE UUID USING user_uuid::UUID;",
+            "ALTER TABLE dim_users ALTER COLUMN join_date TYPE DATE USING join_date::DATE;"
+        ]
+        for command in alter_commands:
+            cursor.execute(command)
+
         # Commit the transaction
         connection.commit()
         print("Task 1: Data types in orders_table altered successfully.")
@@ -224,3 +241,5 @@ finally:
         connection.close()
         
         print("Connection closed")
+
+
