@@ -6,7 +6,7 @@ from scripts.data_extraction import DataExtractor
 import pandas as pd
 
 
-# Create the DataFrame which will contain the user data
+# Create and upload the DataFrame which will contain the user data
 
 # Create an instance of the DatabaseConnector class
 database = DatabaseConnector()
@@ -34,7 +34,7 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 database.upload_to_db(cleaned_df, table_name='dim_users')
 
 
-# Create the DataFrame that will contain card_details
+# Create and upload the DataFrame that will contain card_details
 
 # Create an instance of the DataExtractor class
 extractor = DataExtractor()
@@ -61,7 +61,7 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 database.upload_to_db(clean_pdf_df, table_name='dim_card_details')
 
 
-# Create the DataFrame which will contain the store_details
+# Create and upload the DataFrame which will contain the store_details
 
 # Define the base URL for the API endpoint that retrieves details of a specific store
 base_url = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details'
@@ -89,7 +89,7 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 database.upload_to_db(clean_stores_df, table_name='dim_store_details')
 
 
-# Create the DataFrame which will contain the products data
+# Create and upload the DataFrame which will contain the products data
 
 # Extract product information from s3 address and return a pandas DataFrame
 extractor = DataExtractor()
@@ -113,3 +113,34 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 
 # Upload 'clean2_products_df' to our initialised engine
 database.upload_to_db(clean2_products_df, table_name='dim_products')
+
+# Create and upload the DataFrame which will contain the orders data
+
+# Initialise a DatabaseConnector instance
+database = DatabaseConnector()
+
+# Initialise engine with yaml_file_path set to 'default'
+db_engine = database.init_db_engine()
+# Retrieve list of tables contained within database
+table_names = database.list_db_tables()
+
+# Extract orders data from table to return Pandas DataFrame
+
+# Initialise a DataExtractor instance
+extractor = DataExtractor()
+
+orders_df = extractor.read_rds_table(db_engine, 'orders_table')
+
+# Initialise DataCleaning, passing orders_df as an argument
+cleaner = DataCleaning(orders_df)
+cleaned_orders_df = cleaner.clean_orders_data()
+
+# Now let's initialise the engine that we will upload our DataFrame to
+
+# Create an instance of the DatabaseConnector class
+database = DatabaseConnector()
+# We will set the 'yaml_file_path' to ensure the connection is made to the upload database engine
+upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml')
+
+# Upload 'cleaned_orders_df' to our initialised engine
+database.upload_to_db(cleaned_orders_df, table_name='orders_table')
