@@ -153,6 +153,9 @@ class DataCleaning:
         return self.df
     
     def clean_products_data(self):
+        '''
+        Clean the products data from the specified DataFrame
+        '''
 
         print("Commencing DataFrame cleaning.")
 
@@ -179,6 +182,9 @@ class DataCleaning:
         return self.df
 
     def convert_product_weights(self):
+        '''
+        Convert product weight data into kg from the specified DataFrame
+        '''
         print("Initiating weight conversion for 'weight' column.")
         # Iterate through the weight column
         for i, weight in enumerate(self.df['weight']):
@@ -227,6 +233,9 @@ class DataCleaning:
         return self.df
     
     def clean_orders_data(self):
+        '''
+        Clean the orders data from the specified DataFrame
+        '''
         remove_columns = ['first_name', 'last_name', '1']  # Adjust if needed
         self.df.drop(columns=remove_columns, inplace=True, errors='ignore')
 
@@ -245,6 +254,9 @@ class DataCleaning:
         return self.df
     
     def clean_date_details_data(self):
+        '''
+        Clean the date details data from the specified DataFrame
+        '''
 
         print("Initiating DataFrame cleaning.")
         # Valid time periods
