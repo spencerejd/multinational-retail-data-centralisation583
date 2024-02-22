@@ -13,16 +13,16 @@ database = DatabaseConnector()
 # Initialise engine with yaml_file_path set to 'default'
 database_engine = database.init_db_engine()
 # Create an instance of the DataExtractor class
-data_extractor = DataExtractor()
+extractor = DataExtractor()
 # Extract data from table 'legacy_users' and store it in a DataFrame
-df = data_extractor.read_rds_table(database_engine, 'legacy_users')
+df = extractor.read_rds_table(database_engine, 'legacy_users')
 
 # Clean the user DataFrame
 
 # Create an instance of the DataCleaning class, with our DataFrame passed as an argument
-data_cleaner = DataCleaning(df)
+cleaner = DataCleaning(df)
 # Clean the DataFrame
-cleaned_df = data_cleaner.clean_user_data(df)
+cleaned_df = cleaner.clean_user_data(df)
 
 # Upload the cleaned user DataFrame to the local database
 
@@ -37,17 +37,17 @@ database.upload_to_db(cleaned_df, table_name='dim_users')
 # Create the DataFrame that will contain card_details
 
 # Create an instance of the DataExtractor class
-data_extractor = DataExtractor()
+extractor = DataExtractor()
 
 # Set file path of pdf
 pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
 # Convert pdf into DataFrame
-pdf_df = data_extractor.retrieve_pdf_data(pdf_path)
+pdf_df = extractor.retrieve_pdf_data(pdf_path)
 
 # Create an instance of the DataCleaning class, passing DataFrame as an argument
-data_cleaner = DataCleaning(pdf_df)
+cleaner = DataCleaning(pdf_df)
 # Clean the DataFrame
-clean_pdf_df = data_cleaner.clean_card_data()
+clean_pdf_df = cleaner.clean_card_data()
 
 # Now initialise the engine that we will upload DataFrame to
 
@@ -70,7 +70,7 @@ headers = {'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'}
 
 # Use the retrieve_stores_data method to fetch data for all stores and save to DataFrame
 # This method iterates over store numbers, makes API calls for each, and collects the data
-stores_df = data_extractor.retrieve_stores_data(base_url, headers)
+stores_df = extractor.retrieve_stores_data(base_url, headers)
 
 # Create an instance of the DataCleaning class, passing store_details DataFrame as an argument
 cleaner = DataCleaning(stores_df)
@@ -88,3 +88,28 @@ upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml
 # Upload 'clean_stores_df' to our initialised engine
 database.upload_to_db(clean_stores_df, table_name='dim_store_details')
 
+
+# Create the DataFrame which will contain the products data
+
+# Extract product information from s3 address and return a pandas DataFrame
+extractor = DataExtractor()
+s3_path = "s3://data-handling-public/products.csv"
+products_df = extractor.extract_from_s3(s3_path)
+
+# Create an instance of the DataCleaning class
+cleaner = DataCleaning(products_df)
+# Convert the product weights into kg
+clean_1_products_df = cleaner.convert_product_weights()
+
+# Clean the 'products_df'
+clean2_products_df = cleaner.clean_products_data()
+
+# Now let's initialise the engine that we will upload our DataFrame to
+
+# Create an instance of the DatabaseConnector class
+database = DatabaseConnector()
+# We will set the 'yaml_file_path' to ensure the connection is made to the upload database engine
+upload_engine = database.init_db_engine(yaml_file_path='rds_upload_db_creds.yaml')
+
+# Upload 'clean2_products_df' to our initialised engine
+database.upload_to_db(clean2_products_df, table_name='dim_products')
