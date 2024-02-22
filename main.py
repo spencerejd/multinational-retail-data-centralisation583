@@ -227,6 +227,50 @@ try:
         for command in alter_commands:
             cursor.execute(command)
 
+    # Modify dim_store_details table
+        
+    with connection.cursor() as cursor:
+        # Merge latitude columns and drop 'lat' column
+        #
+        cursor.execute("""
+            UPDATE dim_store_details
+            SET latitude = COALESCE(latitude, lat);
+            ALTER TABLE dim_store_details DROP COLUMN lat;
+        """)
+
+        # Alter column data types
+        cursor.execute("""
+            ALTER TABLE dim_store_details
+            ALTER COLUMN longitude TYPE FLOAT USING longitude::FLOAT,
+            ALTER COLUMN locality TYPE VARCHAR(255),
+            ALTER COLUMN store_code TYPE VARCHAR(255),
+            ALTER COLUMN staff_numbers TYPE SMALLINT USING staff_numbers::SMALLINT,
+            ALTER COLUMN opening_date TYPE DATE USING opening_date::DATE,
+            ALTER COLUMN store_type TYPE VARCHAR(255),
+            ALTER COLUMN latitude TYPE FLOAT USING latitude::FLOAT,
+            ALTER COLUMN country_code TYPE VARCHAR(255),
+            ALTER COLUMN continent TYPE VARCHAR(255);
+        """)
+
+    # Handle NULL Values
+    with connection.cursor() as cursor:
+        # Update string columns
+        text_columns_to_update = ['locality', 'store_code', 'store_type', 'country_code', 'continent']
+        for column in text_columns_to_update:
+            cursor.execute(f"""
+                UPDATE dim_store_details
+                SET {column} = COALESCE({column}, 'N/A')
+                WHERE {column} IS NULL;
+            """)
+        
+        # Update numeric columns with a default value
+        cursor.execute("""
+            UPDATE dim_store_details
+            SET longitude = COALESCE(longitude, 0.0),
+                latitude = COALESCE(latitude, 0.0)
+            WHERE longitude IS NULL OR latitude IS NULL;
+        """)
+
         # Commit the transaction
         connection.commit()
         print("Task 1: Data types in orders_table altered successfully.")
