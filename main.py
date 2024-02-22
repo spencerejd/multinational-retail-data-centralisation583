@@ -338,6 +338,20 @@ try:
         cursor.execute('ALTER TABLE dim_products ALTER COLUMN weight_class TYPE VARCHAR(%s) USING weight_class::VARCHAR(%s);',(max_lengths[2], max_lengths[2]))
 
 
+    # Modify dim_date_times table schema
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            ALTER TABLE dim_date_times
+            ALTER COLUMN month TYPE VARCHAR(2),
+            ALTER COLUMN year TYPE VARCHAR(4),
+            ALTER COLUMN day TYPE VARCHAR(2),
+            ALTER COLUMN time_period TYPE VARCHAR(10),
+            ALTER COLUMN date_uuid TYPE UUID USING date_uuid::UUID;
+
+            """)
+
+
+
         # Commit the transaction
         connection.commit()
         print("Task 1: Data types in orders_table altered successfully.")
