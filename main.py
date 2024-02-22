@@ -350,11 +350,25 @@ try:
 
             """)
 
+    # Modify the dim_card_details table
+    with connection.cursor() as cursor:
+        # Find the max length for the objects contained within the following columns
+        cursor.execute("""
+            SELECT MAX(LENGTH(card_number)) AS max_card_number_length,
+                    MAX(LENGTH(expiry_date)) AS max_expiry_date_length
+            FROM dim_card_details
+        """)
+        max_lengths = cursor.fetchone()
 
-
+    with connection.cursor() as cursor:
+        # Execute ALTER TABLE commands
+        cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN card_number TYPE VARCHAR(%s);", (max_lengths[0],))
+        cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN expiry_date TYPE VARCHAR(%s);", (max_lengths[1],))
+        cursor.execute("ALTER TABLE dim_card_details ALTER COLUMN date_payment_confirmed TYPE DATE USING date_payment_confirmed::DATE;")
+            
         # Commit the transaction
         connection.commit()
-        print("Task 1: Data types in orders_table altered successfully.")
+        print("Data types in sales_data database tables altered successfully.")
 
 except Exception as e:
     print(f"Error: {e}")
